@@ -38,4 +38,20 @@ ORDER BY rank, Title;
 
 -----
 
+3.
+
+SELECT
+    Users.Name,
+    COUNT(Likes.UserID) >= 50 AS received_likes
+FROM Users
+JOIN Post
+    ON Users.UserID = Post.UserID
+LEFT JOIN Likes
+    ON Post.PostURL = Likes.PostURL
+WHERE DATE_PART('month', Post.Timestamp) = 3
+GROUP BY Users.UserID
+ORDER BY Users.Name;
+
+---
+
 

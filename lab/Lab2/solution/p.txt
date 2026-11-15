@@ -14,5 +14,28 @@ ORDER BY Post.Title;
 
 -------
 
+2.
+
+WITH ranked_posts AS (
+    SELECT
+        Post.PostURL,
+        Post.Title,
+        RANK() OVER (
+            ORDER BY COUNT(Likes.UserID) DESC
+        ) AS rank
+    FROM Post
+    JOIN PostTag
+        ON Post.PostURL = PostTag.PostURL
+    LEFT JOIN Likes
+        ON Post.PostURL = Likes.PostURL
+    WHERE PostTag.Tag = '#leadership'
+    GROUP BY Post.PostURL
+)
+SELECT PostURL, Title, rank
+FROM ranked_posts
+WHERE rank <= 5
+ORDER BY rank, Title;
+
+-----
 
 

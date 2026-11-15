@@ -1,0 +1,18 @@
+
+1.
+
+------
+
+SELECT
+    Post.Title,
+    STRING_AGG(PostTag.Tag, ', ') AS tags
+FROM Post
+LEFT JOIN PostTag
+    ON Post.PostURL = PostTag.PostURL
+GROUP BY Post.PostURL
+ORDER BY Post.Title;
+
+-------
+
+
+

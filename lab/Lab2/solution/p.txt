@@ -4,13 +4,13 @@
 ------
 
 SELECT
-    Post.Title,
-    STRING_AGG(PostTag.Tag, ', ') AS tags
+    title,
+    STRING_AGG(tag, ', ') AS tags
 FROM Post
 LEFT JOIN PostTag
     ON Post.PostURL = PostTag.PostURL
-GROUP BY Post.PostURL
-ORDER BY Post.Title;
+GROUP BY Post.postURL
+ORDER BY title ASC;
 
 -------
 
@@ -19,7 +19,7 @@ ORDER BY Post.Title;
 WITH ranked_posts AS (
     SELECT
         Post.PostURL,
-        Post.Title,
+        Post.title,
         RANK() OVER (
             ORDER BY COUNT(Likes.UserID) DESC
         ) AS rank
@@ -31,7 +31,7 @@ WITH ranked_posts AS (
     WHERE PostTag.Tag = '#leadership'
     GROUP BY Post.PostURL
 )
-SELECT PostURL, Title, rank
+SELECT PostURL, title, rank
 FROM ranked_posts
 WHERE rank <= 5
 ORDER BY rank, Title;
@@ -53,5 +53,59 @@ GROUP BY Users.UserID
 ORDER BY Users.Name;
 
 ---
+4.
+
+SELECT
+    Users.Name,
+    NOT EVERY(Friend.UserID IS NULL) AS has_friend,
+    MIN(Subscription.DateOfPayment) AS registration_date
+FROM Users
+JOIN Subscription
+    ON Users.UserID = Subscription.UserID
+LEFT JOIN Friend
+    ON Users.UserID = Friend.UserID
+    OR Users.UserID = Friend.FriendID
+GROUP BY Users.UserID
+HAVING DATE_PART('month', MIN(Subscription.DateOfPayment)) = 1
+ORDER BY Users.Name ASC;
+
+------------
+
+5.
+
+WITH RECURSIVE friend_chain AS (
+    SELECT
+        Users.Name,
+        Users.UserID,
+        Friend.FriendID,
+        1 AS depth
+    FROM Users
+    LEFT JOIN Friend
+        ON Users.UserID = Friend.UserID
+    WHERE Users.UserID = 20
+
+    UNION ALL
+
+    SELECT
+        Users.Name,
+        Users.UserID,
+        Friend.FriendID,
+        friend_chain.depth + 1 AS depth
+    FROM friend_chain
+    JOIN Users
+        ON friend_chain.FriendID = Users.UserID
+    LEFT JOIN Friend
+        ON Users.UserID = Friend.UserID
+)
+SELECT 
+Name, 
+UserID AS user_id, 
+FriendID AS friend_id
+FROM friend_chain
+ORDER BY depth ASC;
+
+-------
+
+
 
 

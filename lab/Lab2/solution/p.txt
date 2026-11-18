@@ -106,6 +106,48 @@ ORDER BY depth ASC;
 
 -------
 
+p+
+
+WITH starting_dates AS (
+    SELECT
+        UserID,
+        MIN(DateOfPayment) AS first_date
+    FROM Subscription
+    GROUP BY UserID
+)
+
+SELECT
+    Week,
+
+    (
+      SELECT COUNT(*)
+      FROM starting_dates
+      WHERE DATE_PART('week', first_date) = week
+     ) 
+      AS new_customers, 
+
+    (SELECT COUNT(*)
+        FROM Subscription
+        JOIN starting_dates
+            ON Subscription.UserID = starting_dates.UserID
+        WHERE Subscription.DateOfPayment > starting_dates.first_date 
+        AND DATE_PART('week',Subscription.DateOfPayment) = week
+        ) 
+       AS kept_customers,
+
+    (SELECT COUNT(*)
+        FROM Post
+        WHERE DATE_PART('week', Timestamp) = week
+      ) 
+      AS activity
+
+FROM generate_series(1, 30) AS week
+ORDER BY week ASC;
+
+
+-----
+
+
 
 
 

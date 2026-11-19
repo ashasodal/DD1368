@@ -43,7 +43,7 @@ ORDER BY Users.name;
 
 SELECT 
     Users.name, 
-    EVERY (Friend.UserID IS NOT NULL), 
+    EVERY (Friend.UserID IS NOT NULL OR Friend.FriendID IS NOT NULL), 
     MIN(Subscription.DateOfPayment) AS RegistrationDate
 FROM Users
 LEFT JOIN Friend ON Users.UserID IN (Friend.UserID, Friend.FriendID) --Behöver inte ha någon vän
@@ -53,3 +53,23 @@ HAVING DATE_PART('month', MIN(Subscription.DateOfPayment)) = 1
 ORDER BY Users.name;
 
 -- Task 5
+
+WITH RECURSIVE friendchain AS (
+    SELECT 
+        Users.name, 
+        Users.userID,
+        Friend.FriendID
+    FROM Users
+    LEFT JOIN Friend ON Users.UserID = Friend.UserID
+    WHERE Users.UserID = 20
+    UNION
+    SELECT
+        Users.name, 
+        Users.userID, 
+        Friend.FriendID
+    From Users
+    LEFT JOIN Friend ON Users.UserID = Friend.UserID
+    INNER JOIN friendchain ON friendchain.FriendID = Users.UserID
+)
+
+SELECT * FROM friendchain;

@@ -43,8 +43,13 @@ ORDER BY Users.name;
 
 SELECT 
     Users.name, 
-    EVERY (Friend.UserID IS NOT NULL)
+    EVERY (Friend.UserID IS NOT NULL), 
+    MIN(Subscription.DateOfPayment) AS RegistrationDate
 FROM Users
-LEFT JOIN Friend ON USERS.UserID = Friend.UserID
+LEFT JOIN Friend ON Users.UserID IN (Friend.UserID, Friend.FriendID) --Behöver inte ha någon vän
+JOIN Subscription ON Users.UserID = Subscription.UserID
 GROUP BY Users.name
+HAVING DATE_PART('month', MIN(Subscription.DateOfPayment)) = 1
 ORDER BY Users.name;
+
+-- Task 5

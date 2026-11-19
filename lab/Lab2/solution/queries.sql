@@ -73,3 +73,35 @@ WITH RECURSIVE friendchain AS (
 )
 
 SELECT * FROM friendchain;
+
+-- Task p+
+
+WITH firstPayment AS (
+    Select 
+        Users.userID, 
+        MIN(Subscription.DateOfPayment) AS firstPayment
+    FROM Users
+    LEFT JOIN Subscription ON Users.userID = Subscription.userID 
+    GROUP BY Users.userID
+)
+
+SELECT 
+    week, 
+    (
+        SELECT COUNT(firstPayment.userID) 
+        FROM firstPayment
+        WHERE DATE_PART('week', firstPayment.firstPayment) = week
+    ) AS new_customers, 
+    (
+        SELECT COUNT(Subscription.userID)
+        FROM Subscription
+        LEFT JOIN firstPayment ON Subscription.userID = firstPayment.userID
+        WHERE DATE_PART('week', Subscription.DateOfPayment) = week AND NOT Subscription.DateOfPayment = firstPayment.firstPayment
+    ),
+    (
+        SELECT COUNT(Post.UserID) 
+        FROM Post
+        WHERE DATE_PART('week', Post.Timestamp) = week
+    )
+
+FROM generate_series(1, 30) as week;

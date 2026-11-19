@@ -58,7 +58,8 @@ WITH RECURSIVE friendchain AS (
     SELECT 
         Users.name, 
         Users.userID,
-        Friend.FriendID
+        Friend.FriendID,
+        1 AS pos
     FROM Users
     LEFT JOIN Friend ON Users.UserID = Friend.UserID
     WHERE Users.UserID = 20
@@ -66,13 +67,20 @@ WITH RECURSIVE friendchain AS (
     SELECT
         Users.name, 
         Users.userID, 
-        Friend.FriendID
+        Friend.FriendID,
+        friendchain.pos + 1 AS pos
+
     From Users
     LEFT JOIN Friend ON Users.UserID = Friend.UserID
     INNER JOIN friendchain ON friendchain.FriendID = Users.UserID
 )
 
-SELECT * FROM friendchain;
+SELECT         
+    friendchain.name, 
+    friendchain.userID, 
+    friendchain.FriendID 
+FROM friendchain
+ORDER BY pos;
 
 -- Task p+
 

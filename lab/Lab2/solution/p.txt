@@ -14,6 +14,9 @@ ORDER BY title ASC;
 
 -------
 
+-- Rank the top 5 posts with the tag #leadership
+-- based on how many likes they got.
+
 2.
 
 WITH ranked_posts AS (
@@ -34,11 +37,15 @@ WITH ranked_posts AS (
 SELECT PostURL, title, rank
 FROM ranked_posts
 WHERE rank <= 5
-ORDER BY rank, Title;
+ORDER BY rank ASC, Title ASC;
 
 -----
 
 3.
+
+-- Show all users who made at least one post in March.
+-- Show their name and true if their posts from March got
+-- at least 50 likes in total, otherwise false.
 
 SELECT
     Users.Name,
@@ -55,6 +62,9 @@ ORDER BY Users.Name;
 ---
 4.
 
+-- Show users whose first subscription payment was in January.
+-- Show their name, if they have at least one friend (true/false),and their registration date.
+
 SELECT
     Users.Name,
     NOT EVERY(Friend.UserID IS NULL) AS has_friend,
@@ -66,6 +76,8 @@ LEFT JOIN Friend
     ON Users.UserID = Friend.UserID
     OR Users.UserID = Friend.FriendID
 GROUP BY Users.UserID
+-- First, we want to find when each user subscribed for the first time.
+-- Then we check if that date was in January, as the task asks.
 HAVING DATE_PART('month', MIN(Subscription.DateOfPayment)) = 1
 ORDER BY Users.Name ASC;
 
@@ -74,23 +86,25 @@ ORDER BY Users.Name ASC;
 5.
 
 WITH RECURSIVE friend_chain AS (
+
+-- anchor query 
     SELECT
         Users.Name,
         Users.UserID,
         Friend.FriendID,
-        1 AS depth
+        1 AS pos
     FROM Users
     LEFT JOIN Friend
         ON Users.UserID = Friend.UserID
     WHERE Users.UserID = 20
 
-    UNION ALL
-
+    UNION 
+-- recursive query
     SELECT
         Users.Name,
         Users.UserID,
         Friend.FriendID,
-        friend_chain.depth + 1 AS depth
+        friend_chain.pos + 1 AS pos
     FROM friend_chain
     JOIN Users
         ON friend_chain.FriendID = Users.UserID
@@ -102,12 +116,25 @@ Name,
 UserID AS user_id, 
 FriendID AS friend_id
 FROM friend_chain
-ORDER BY depth ASC;
+ORDER BY pos ASC;
 
 -------
 
+
+
+-- Show a weekly report from week 1 to 30.
+-- Show how many users subscribed for the first time each week.
+-- Count all later subscription payments as renewals.
+-- Show the activity (number of posts created each week).
+-- The first payment is also the user's registration date.
+
+
+
 p+
 
+
+-- Each UserID appears only once in starting_dates because of GROUP BY.
+-- This lets us match each payment with the user's first payment date.
 WITH starting_dates AS (
     SELECT
         UserID,
@@ -126,19 +153,27 @@ SELECT
      ) 
       AS new_customers, 
 
-    (SELECT COUNT(*)
+    (   SELECT COUNT(*)
+
+-- Each UserID is unique in starting_dates.
+-- We join the tables to compare each payment with the user's first payment date.
         FROM Subscription
         JOIN starting_dates
             ON Subscription.UserID = starting_dates.UserID
+
+-- Keep only payments made after the user's first payment since these payments count as renewals (kept_customers).
         WHERE Subscription.DateOfPayment > starting_dates.first_date 
         AND DATE_PART('week',Subscription.DateOfPayment) = week
         ) 
+   
+-- kept_customers counts renewals, meaning all payments a user makes after their first subscription payment.
        AS kept_customers,
 
     (SELECT COUNT(*)
         FROM Post
         WHERE DATE_PART('week', Timestamp) = week
       ) 
+-- Activity shows how many posts were created each week.
       AS activity
 
 FROM generate_series(1, 30) AS week

@@ -6,7 +6,7 @@ SELECT
     STRING_AGG(PostTag.Tag, ',') 
 FROM Post
 LEFT JOIN PostTag ON Post.PostURL = PostTag.PostURL
-GROUP BY Post.title
+GROUP BY Post.PostURL
 ORDER BY Post.title;
 
 -- Task 2
@@ -17,7 +17,7 @@ WITH TempTable AS (
         Post.title, 
         RANK () OVER (ORDER BY COUNT(Likes.PostURL) DESC) as rank
     FROM Post
-    LEFT JOIN Likes ON Post.PostURL = Likes.PostURL
+    JOIN Likes ON Post.PostURL = Likes.PostURL
     LEFT JOIN PostTag ON Post.PostURL = PostTag.PostURL
     WHERE PostTag.Tag = '#leadership'
     GROUP BY Post.PostURL
@@ -33,10 +33,10 @@ SELECT
     Users.name, 
     COUNT(Likes.PostURL) >= 50 AS postLikes
 From Users
-LEFT JOIN Post ON Post.UserID = Users.UserID
+JOIN Post ON Post.UserID = Users.UserID
 LEFT JOIN Likes ON Post.PostURL = Likes.PostURL
 WHERE DATE_PART('month', Post.Timestamp) = 3
-GROUP BY Users.name
+GROUP BY Users.UserID
 ORDER BY Users.name;
 
 -- Task 4
@@ -89,7 +89,7 @@ WITH firstPayment AS (
         Users.userID, 
         MIN(Subscription.DateOfPayment) AS firstPayment
     FROM Users
-    LEFT JOIN Subscription ON Users.userID = Subscription.userID 
+    JOIN Subscription ON Users.userID = Subscription.userID 
     GROUP BY Users.userID
 )
 
@@ -103,13 +103,13 @@ SELECT
     (
         SELECT COUNT(Subscription.userID)
         FROM Subscription
-        LEFT JOIN firstPayment ON Subscription.userID = firstPayment.userID
+        JOIN firstPayment ON Subscription.userID = firstPayment.userID
         WHERE DATE_PART('week', Subscription.DateOfPayment) = week AND NOT Subscription.DateOfPayment = firstPayment.firstPayment
-    ),
+    ) AS kept_customers,
     (
         SELECT COUNT(Post.UserID) 
         FROM Post
         WHERE DATE_PART('week', Post.Timestamp) = week
-    )
+    ) AS activity
 
 FROM generate_series(1, 30) as week;

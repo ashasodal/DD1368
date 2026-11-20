@@ -141,7 +141,7 @@ WITH firstPayment AS (
         Users.userID, 
         MIN(Subscription.DateOfPayment) AS firstPayment
     FROM Users
-    LEFT JOIN Subscription ON Users.userID = Subscription.userID 
+    JOIN Subscription ON Users.userID = Subscription.userID 
     GROUP BY Users.userID
 )
 
@@ -150,16 +150,14 @@ SELECT
     (
         SELECT COUNT(*) 
         FROM firstPayment
-      --Count users whose first payment was made during the current week.
         WHERE DATE_PART('week', firstPayment.firstPayment) = week
     ) AS new_customers, 
     (
         SELECT COUNT(*)
         FROM Subscription
-        LEFT JOIN firstPayment 
+        JOIN firstPayment 
         ON Subscription.userID = firstPayment.userID
-        WHERE DATE_PART('week', Subscription.DateOfPayment) = week 
-      AND NOT Subscription.DateOfPayment = firstPayment.firstPayment
+        WHERE DATE_PART('week', Subscription.DateOfPayment) = week AND NOT Subscription.DateOfPayment = firstPayment.firstPayment
     ) AS kept_customers,
     (
         SELECT COUNT(*) 
@@ -168,7 +166,7 @@ SELECT
     ) AS activity
 
 FROM generate_series(1, 30) as week
-ORDER BY week;
+ORDER BY week ASC;
 
 
 

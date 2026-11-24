@@ -1,13 +1,35 @@
 -- task 1
 
+-- Vill jag bara ha den med minst (alltså 1 granne) eller ordna i minst till flest? 
 -- Måste jag använda CTE:s ? 
-SELECT
-    Country.Name,
-    COUNT(Country.Code) as num
-FROM Country
-JOIN borders ON Country.Code IN (borders.Country1, borders.Country2)
-GROUP BY Country.Code
-ORDER BY RANK () OVER (ORDER BY COUNT(Country.Code));
+SELECT * 
+FROM 
+    (SELECT
+        Country.Name,
+        COUNT(Country.Code) as num
+    FROM Country
+    JOIN borders ON Country.Code IN (borders.Country1, borders.Country2)
+    GROUP BY Country.Code)
+ORDER BY num; 
+
+-- ALTERNATIV IFALL VI BARA VILL VISA MINST ANTAL
+
+WITH temp AS 
+    (SELECT
+        Country.Name,
+        COUNT(Country.Code) as num
+    FROM Country
+    JOIN borders ON Country.Code IN (borders.Country1, borders.Country2)
+    GROUP BY Country.Code)
+
+SELECT * 
+FROM temp
+WHERE (
+    SELECT MIN(num)
+    FROM temp
+) = num
+ORDER BY num; 
+
 
 -- task 2
 
@@ -15,7 +37,7 @@ SELECT *
 FROM 
     (SELECT 
         Spoken.Language,
-        ROUND(SUM(Country.population * Spoken.Percentage / 100)) AS numberspeaker --Måste det se ut exakt som i expected? Avrundning och
+        ROUND(SUM(Country.population * Spoken.Percentage / 100)) AS numberspeaker 
     FROM Spoken
     JOIN Country ON Spoken.Country = Country.Code
     GROUP BY Spoken.Language)
@@ -38,25 +60,36 @@ FROM
 WHERE gdp1 IS NOT NULL AND gdp2 IS NOT NULL
 ORDER BY ratio DESC;
 
--- p+ 1
+-- p+ task 1
 WITH RECURSIVE recursion AS (
     SELECT 
         Country.code, 
         Country.Name, 
-        path_length = 1
+        0 as path_length
     FROM Country
-    WHERE Country.code = 'SE'
+    WHERE Country.code = 'S'
 
-    UNION 
-
+    UNION
+    
     SELECT 
         Country.code, 
         Country.Name, 
-        path_length = recursion.path_length + 1
-    FROM Country
-    JOIN borders ON Country.code IN (borders.Country1, borders.Country2)
-    JOIN recursion ON recusion.code = Country.code
-    WHERE path_length <=5
+        recursion.path_length + 1 as path_length
+    FROM recursion
+    JOIN borders ON recursion.code IN (borders.Country1, borders.Country2)
+    JOIN Country ON Country.code <> recursion.code AND Country.code IN (borders.Country1, borders.Country2)
+    WHERE recursion.path_length <5
 )
 
-SELECT * FROM recursion;
+SELECT * 
+FROM (
+    SELECT DISTINCT ON (recursion.code)
+    recursion.code, 
+    recursion.Name, 
+    recursion.path_length as min
+    FROM recursion
+    ORDER BY recursion.code, min)
+WHERE min > 0
+ORDER BY min;
+
+-- p+ task 2

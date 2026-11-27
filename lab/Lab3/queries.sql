@@ -1,19 +1,5 @@
 -- task 1
 
--- Vill jag bara ha den med minst (alltså 1 granne) eller ordna i minst till flest? 
--- Måste jag använda CTE:s ? 
-SELECT * 
-FROM 
-    (SELECT
-        Country.Name,
-        COUNT(Country.Code) as num
-    FROM Country
-    JOIN borders ON Country.Code IN (borders.Country1, borders.Country2)
-    GROUP BY Country.Code)
-ORDER BY num; 
-
--- ALTERNATIV IFALL VI BARA VILL VISA MINST ANTAL
-
 WITH temp AS 
     (SELECT
         Country.Name,
@@ -93,3 +79,42 @@ WHERE min > 0
 ORDER BY min;
 
 -- p+ task 2
+
+WITH RECURSIVE recursion AS (
+    SELECT
+        River.Name,
+        River.River, 
+        1 AS numrivers, 
+        River.Length AS totlength,
+        River.Name || '' AS allNames    
+    FROM River
+    WHERE River.Name IN ('Nile', 'Amazonas', 'Yangtze', 'Rhein', 'Donau', 'Mississippi')
+
+    UNION
+
+    SELECT
+        River.Name,
+        River.River, 
+        recursion.numrivers + 1 AS numrivers, 
+        recursion.totlength + River.Length AS totlength,
+        recursion.allNames || '-' || COALESCE(River.Name, '') AS allNames
+    FROM River
+    JOIN recursion ON River.River = recursion.Name
+)
+
+SELECT * 
+FROM (
+    SELECT 
+        RANK () OVER (ORDER BY numrivers) AS rank,
+        allNames, 
+        numrivers, 
+        totlength
+    FROM (
+        SELECT 
+            *, 
+            MAX(numrivers) OVER (PARTITION BY SPLIT_PART(allNames, '-', 1)) AS max_rivers
+        FROM recursion
+    )
+    WHERE numrivers = max_rivers
+)
+ORDER BY rank ASC, totlength DESC;
